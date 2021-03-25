@@ -14,35 +14,43 @@
 Introduction
 ============
 
-The main goal of the observatory control system is to provide a user-friendly framework with a high level of flexibility.
+The construction, integration, commissioning and operation of observatories requires a significant amount of knowledge spanning many disciplines.
+However, all operational aspects are performed using some piece of control software, whether it be embedded low-level servo control to enable precise positioning of the mount to a simple graphical display of the current weather conditions.
+The observatory control system, which encompasses numerous levels of control, must span a large range of functionalities that are applicable to numerous users, all with varying experience levels and expectations regarding ease-of-use.
+Therefore, from within this centralized stack of code, a high degree of flexibility must be maintained, while providing a user-friendly framework to all levels of users.
 The top-level functionality specifications that drives the development of the observatory control system are:
 
   - Regular operations routines should be easily accessible;
   - Must include a highly customizable scripting capability must be available and able to run user-written code;
   - An interactive mode, equivalent to a user sandbox space, must be available to allow development of routines on the fly as well as debugging;
-  - Capability to incorporate user-developed features.
+  - Capability to incorporate user-developed features;
 
-To accomplish the aforementioned goals, the observatory system is equipped with three main components: the :ref:`LSST Observing Visualization Environment (LOVE)<LOVE>`, :ref:`ScriptQueue <Script-Queue>` and :ref:`Jupyter notebooks <Jupyter-notebooks>`.
+In the standard operational model used to perform the survey, the observatory will be largely driven by the Scheduler, which will designate a visit script, which consists of a series of operations that are performed including slewing the telescope and taking an image.
+The script will be execution will be automated while the user will be able to observe (or interrupt) the progress via a graphical interface.
+It is expected that operators will be much more involved during the start-up and shutdown phases, as well as during afternoon calibrations.
+In the majority of cases, the operations will be routine and are expected to be done from a high-level of the observatory control software, as is discussed further in following sections.
+
+During integration, commissioning, and engineering time, there will be situations where users will want to execute non-standard, customized operations which require an increased level of flexibility and control.
+As to be expected, the additional functionality required to perform such tasks requires more in-depth knowledge specific areas of the system and therefore require a knowledge base and toolset beyond what is typical of an observing specialist which performs nighttime operations.
+This evolves further as one considers what tooling and knowledge is required for development of the system, however, all of the above users and usages require those interactive tools.
+
+The breadth of the observatory control system allows users to perform both these routine and customized tasks via three main interactive components: the :ref:`LSST Observing Visualization Environment (LOVE)<LOVE>`, :ref:`ScriptQueue <Script-Queue>` and :ref:`Jupyter notebooks <Jupyter-notebooks>`.
+This document begins with a high-level overview of the systems, including references to more detailed documentation on their operation.
+
+In sections X and Y, will review each of these components an explore how users can take advantage of their features to accomplish different types of tasks and contribute to the observatory control system.
+Then, to assist in defining the expectations and knowledge levels associated with the multiple complexities associated with all of the required tasks that must be performed by the OCS, we've identified three main actors and their expected roles and ability levels associated their interactions with the control system.
+The identified actors are: 1) Observing Specialists, 2) Commissioning Scientists, 3) Software Developers.
+In reality, we expect (and need) several people to have significant overlap between these roles.
+
+The documentation associated with the example procedures expected to be performed by each of the actors are then linked to provide a demonstration of the current usability level associated with each task.
 
 Under the standard operational procedures used to perform the survey, the observatory will be largely driven by the Scheduler, which will designate a visit script, which consists of a series of operations that are performed via a content controlled script. The script will be executed by the scriptQueue, and the user will be able to observe (or interrupt) the progress via the LOVE interface.
 It is expected that operators will be much more involved during the start-up and shutdown phases, as well as during afternoon calibrations.
 In the majority of cases, the operations will be routine and are expected to be done from a high-level of the observatory control software, as is discussed further in following sections.
 
-During integration, commissioning, and engineering time there will be situations where users will want to execute non-standard, customized operations which require an increased level of flexibility and control.
-As to be expected, the additional functionality required to perform such tasks requires more in-depth knowledge of the system.
-This document aims to match the types of system users with the expected operational methodologies or tools.
-Furthermore, it attempts to define the level of knowledge required to use the different tools and methodologies.
-
-The breadth of the observatory control system allows users to perform those custom tasks via an interactive environment.
-There also exists a workflow on how to develop these tasks to a level where they can be incorporated into to the control system packages.
-
-In the following sections we will review each of these components an explore how users can take advantage of their features to accomplish different types of tasks and contribute to the observatory control system.
-
-.. note::
-
-   Should we have a section with a definition of what we consider users (might be a bit redundant)?
-
-   Should we define the different levels of users and what are expected of them?
+Lastly, using concrete examples, we present examples of the types of interactions that these actors will perform with links to procedures on how to do them using the multiple interfaces.
+These examples explore how users can take advantage of the features also include cases of how *not* to use an interface due to its limitations or inefficiencies in some areas.
+Discussions regarding the ease-of-use and required additional features can then use these examples as a basis for the conversation.
 
 .. _LOVE:
 
@@ -144,7 +152,7 @@ In order to take full advantage of Jupyter notebooks users must acquire some fam
 These are some basic concepts users should make an effort to be familiar with:
 
   - Commandable SAL Component (CSC).
-  - `SalObj`_ Python library with special emphasis in the concept of `Remote`_.
+  - `SalObj`_ Python library with special emphasis in the concept of a `Remote`_.
   - Some familiarity with the `Telescope and Site observatory control package`_.
   - Intermediate Python Skills.
   - Familiarity with `Python standard asyncio library`_.
@@ -166,48 +174,106 @@ Details on how this repository fits into the development process can be found in
 .. _ts_notebooks: https://github.com/lsst-ts/ts_notebooks
 .. _tstn-010: https://tstn-010.lsst.io
 
-.. _User-Knowledge-Expectations:
+.. _Actor-Interactions:
 
-User-Knowledge Expectations
-===========================
+Expectations on Actor Interactions and Abilities
+================================================
 
-Required software-interactions of different types of users:
+As discussed in the `Introduction`_, the roles of different personnel in the observatory will interact with the control system at multiple levels.
+Some users will have a broad expanse of interactions, yet shallow in depth, whereas others will have narrow interactions but drill deep into the specific application.
+It is useful to try to define these roles such that the user-experience and breadth of knowledge required to perform them can be better aligned to tailor the ease-of-use, flexibility, and functionality of the various interfaces.
 
-    - Observing Specialists or visiting-operators
+Definition of Roles
+-------------------
 
-        - standard nighttime/daytime ops
-        - operates via LOVE, troubleshoots via EUIs
-        - Executes and makes small edits to notebooks, but is not expected to write them from scratch
+For the purposes of this exercise, three different roles have been created.
+Particularly early on, it is expected that many people will bridge two (or more) of these roles.
+Below is a broad definition of these roles and how they differ in interaction and experience:
 
-            - Minimal level of Python, a few commands of git (e.g. git-checkout and git-pull)
+    1. Observing Specialists:
+        These actors perform standard nighttime and daytime operations such as calibrations, start-up, shut-down, and monitoring.
+        They are also required to troubleshoot issues that arise, but are expected to call specialists when unable to solve the issue in short order.
+        These actors have a very broad knowledge of system operation but are not experts in a specific area, specifically software development.
 
-        - Comfortable in finding and execute commands via high-level classes
+    2. Commissioning Scientists:
+        These actors are often focused to specific subsystems or characterization activities.
+        Their level of knowledge is generally less expansive and more focused with an interest in driving deeper into the system functionality.
+        Interactions with the system are often based upon performance analysis and understanding the coordination between specific subsystems.
+        It is expected that these personnel will be performing activities that are not part of standard operation and therefore require greater flexibility.
+        These actors have software development experience but are generally not significant contributors to the production code base.
+
+    3. Software Developers
+        These actors write the control system code that interacts with the components, often at numerous levels.
+        Their level of knowledge is generally very deep in the area of the operation of a particular subsystem but their understanding of full system interaction and operation is much reduced compared to the other roles.
+        These actors do not perform operational activities.
+        Their software development expertise is very high and they are almost always writing production-level code.
+
+Actor Interactions with the Control Software
+--------------------------------------------
+
+Each actor is expected to interact with the software in different ways, but in nearly all cases users will use a blend of the tools presented previously.
+This section defines the levels of control software interaction and knowledge required by each actor to perform their assumed tasks.
+Note that it does not specify non-software tasks associated with someone in that typical position.
+
+
+    - **Observing Specialists**
+
+        - Conducts observatory functions primarily by using the LOVE interface to the scriptQueue
+
+            - Includes opening, closing, taking manual images, performing calibrations, manual slewing, component state transitions
+
+        - Monitoring of systems utilizes the LOVE interface
+        - Launches scripts via the scriptQueue. Able to comfortably determine and modify the associated configuration parameters.
+        - Troubleshooting of systems will utilize component EUIs and feedback presented from LOVE and/or the scriptQueue
+        - Mining of information and analyzing of sequencing from the EFD is not required
+        - Ability to enter and observe Chronograf dashboards is required
+        - Possess ability to execute and make small edits to notebooks
+
+            - Requires a minimal level of Python, and knowledge of few commands of git (e.g. git-checkout and git-pull)
+            - Comfortable in finding and executing commands via high-level classes
+        - Ability to update and maintain operations related documentation (written in rST, hosted on GitHub)
+
         - Some knowledge of low-level CSC functionality
-        - Interacts with data to perform offsetting, focus etc.
 
-    - Commissioning Scientist/Engineer
+            - Able to examine and change between configurations
+            - Troubleshoot at the level diagnostics (error codes), status, and manual (non-DDS) motion where required
+
+        - Interacts with data to perform offsetting, focus, but via tooling that provides the calculations
+        - All information needed to operate the facility is provided to them, they are not required to build analysis and/or display tools
+
+    - **Commissioning Scientist/Engineer**
 
         - Includes operator skills plus the following:
         - Extensive use of the notebook interface, including the writing of code and launching of scripts
 
-            - Comfortable in Python, competent with git
+            - Comfortable in Python, competent with git and GitHub
 
-        - Writes and executes custom external scripts
+        - Ability to diagnose both system and component level behavioural issues
+        - Not required to identify the issue in the source code
         - Able to create and load new config files
-        - Not expected to write production level scripts
+        - Writes and executes custom external scripts from both notebooks, ScriptQueue and LOVE
+        - Not expected to write production level scripts (see tstn-010 for definition)
         - Able to switch between software versions of deployed components
-        - Able to update scriptQueue repos
+        - Able to update scriptQueue container repos
         - Able to diagnose issues via the EFD/Chronograf
+        - Ability to generate and maintain documentation (written in rST)
+        - Works out of already defined environments (e.g. NTS or Summit)
 
-    - Software Developer
+            - Is expected to be comfortable changing between software packages in Nublado environment
+        - Not expected to be familiar with software builds or deployment
+        - Not expected to work with the standard development container/environment
 
-        - Updates code of CSCs or classes
+    - **Software Developer**
+
+        - Diagnoses behavioural issues at the code-level of CSCs or higher-level classes
         - Writes and reviews production level scripts
 
-            - Expert in Python and git
+            - Expert in Python, git and other applicable languages
 
-        - Modifies available builds
-        - Manages deployment (Rancher)
+        - Modifies and builds components, tags for release where appropriate
+        - Familiar with deployment strategies and restarting components (ArgoCD)
+        - Ability to probe into individually deployed containers (Rancher)
+        - Often works from the standardized development container
 
 
 
@@ -231,6 +297,17 @@ Commissioning Level:
     - Standard Notebook for testing
     - Script writing example?
 
+
+Items to be addressed in a future revision
+==========================================
+
+    - On-the-fly image interaction
+    - Communication/coordination with other software systems
+
+        - OCPS? Other tools?
+        - Logging?
+
+    - Discussion of test-stands and how to use them
 
 
 .. _Contributing:
