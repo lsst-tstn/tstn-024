@@ -35,9 +35,9 @@ As to be expected, the additional functionality required to perform such tasks r
 This evolves further as one considers what tooling and knowledge is required for development of the system, however, all of the above users and usages require those interactive tools.
 
 The breadth of the observatory control system allows users to perform both these routine and customized tasks via three main interactive components: the :ref:`LSST Observing Visualization Environment (LOVE)<LOVE>`, :ref:`ScriptQueue <Script-Queue>` and :ref:`Jupyter notebooks <Jupyter-notebooks>`.
-This document begins with a high-level overview of the systems, including references to more detailed documentation on their operation.
+This document begins with a high-level overview of the systems and explore how users can take advantage of their features to accomplish different types of tasks
+References to more detailed documentation regarding their operation are linked throughout..
 
-In sections X and Y, will review each of these components an explore how users can take advantage of their features to accomplish different types of tasks and contribute to the observatory control system.
 Then, to assist in defining the expectations and knowledge levels associated with the multiple complexities associated with all of the required tasks that must be performed by the OCS, we've identified three main actors and their expected roles and ability levels associated their interactions with the control system.
 The identified actors are: 1) Observing Specialists, 2) Commissioning Scientists, 3) Software Developers.
 In reality, we expect (and need) several people to have significant overlap between these roles.
@@ -67,20 +67,26 @@ Important to say that users will interact with basic observatory operations via 
 Script Queue
 ============
 
-The `ScriptQueue`_ is the main hub for the execution of regular operations that requires minimum interactivity.
+The `ScriptQueue`_ is the main hub for the execution of regular operations that require a minimum level of interaction.
 As mentioned above in the `LOVE`_ section, although a user-interface to perform an operation, such as a telescope offset, will be way in which a user performs the offset, the actual action will be a :ref:`SAL Script <SAL_Scripts>` being loaded and executed by the `ScriptQueue`_.
 The capabilities and functionalities executed by the scriptQueue will be very large.
 For instance, when operators need to prepare the observatory for calibrations or for night operation, it will be possible to add a script to the ScriptQueue that will perform all the required tasks (e.g. position telescope and dome, perform required fine tuning in positioning, open mirror covers and so on).
-Likewise, the ScriptQueue should be the main tool astronomers will rely on to perform regular nighttime operations, e.g., track a target and obtain a set of standard observations.
+Likewise, the ScriptQueue is the main tool observers will rely on to perform regular nighttime operations, e.g., track a target and obtain a set of standard observations.
+As soon as one script finishes, the next one begins until no scripts remain to be run.
+The Scheduler for the survey essentially adds scripts to the scriptQueue after each visit until told by the observer to stop.
 
 As mentioned already, interacting with the ScriptQueue is mainly done through :ref:`LOVE ScriptQueue user interface <fig-scriptqueueui>`.
+The interface allows users to stop, start and pause the ScriptQueue.
+It also displays the status of scripts and any errors that occur.
+Shuffling the order of queued scripts is also possible.
+Lastly, users can quickly relaunch previously run scripts without having to re-enter any modifications to the default configuration.
 
 .. figure:: /_static/ScriptQueueUI.png
    :name: fig-scriptqueueui
    :target: ../_images/ScriptQueueUI.png
    :alt: LOVE ScriptQueue user interface
 
-   ScriptQueue LOVE user interface. ...
+   A screenshot of the LOVE interface to interact with the ScriptQueue.
 
 In general, scripts require minimum interaction to be executed except, of course, for the occasional configuration.
 A database of configuration will be available for users to execute the most common set of operations and they also have the possibility of editing configuration on the user interface, which also provides schema validation.
@@ -99,27 +105,29 @@ SAL Scripts
 
 `SAL Scripts`_ are the files which contain the logic and coordination of events and CSCs that get executed by the `ScriptQueue`_.
 It is not expected these will be modified during standard night-time operations.
-
-It is also possible to execute these from a Jupyter Notebook or from the command line when required.
+All `SAL Scripts`_ vary greatly in complexity of the operation being performed.
 These files have a strict format and must contain specific information in order to be capable of execution.
-
+It is also possible to execute these from a Jupyter Notebook or from the command line when required.
+This is particularly useful when actively developing or debugging a script.
+For example, an example of a SAL script that performs a relatively fundamental task is `Enable MTCS <https://github.com/lsst-ts/ts_standardscripts/blob/develop/python/lsst/ts/standardscripts/maintel/enable_mtcs.py>`_ which brings all components of the TCS to the enabled state.
+The script is normally a launched using the default configuration which enables all components, however, the flexibility is present to only enable a subset if the observer chooses to do so.
+A more complicated script, such as `Prepare for On-Sky <https://github.com/lsst-ts/ts_standardscripts/blob/develop/python/lsst/ts/standardscripts/auxtel/prepare_for_onsky.py>`_ performs a series of order-specific operations to bring the systems online, then open the dome and telescope safely.
 
 Regular operational scripts are separated into two distinct groups of `SAL Scripts`_; standard and external.
 
 `Standard Scripts`_ hosts production-level operational scripts that are well tested and understood.
 They must strictly follow the `development guidelines`_ and are subject to rigorous code review.
 
-`External Scripts`_, on the other hand, works as a staging and user sandbox area for the development `SAL Scripts`_.
-Following the `development guidelines`_ on this package is still recommended (but not strictly enforced) and code is subjected to less rigorous code review.
+`External Scripts`_, on the other hand, acts as a staging or user sandbox area for the development of `SAL Scripts`_.
+Following the `development guidelines`_ on this package is still recommended (but not as strictly enforced) and code is subjected to less rigorous code review.
 
-Additional details about the classification of different levels of operations can be found in `tstn-010`_, as well as guidelines on how to contribute.
+Additional details about the classification of different levels of operations can be found in `tstn-010`_, as well as guidelines on how to contribute features to the code base.
 
 .. _ScriptQueue: https://ts-scriptqueue.lsst.io
 .. _SAL Scripts: https://ts-salobj.lsst.io/sal_scripts.html
 .. _Standard Scripts: https://github.com/lsst-ts/ts_standardscripts
 .. _External Scripts: https://github.com/lsst-ts/ts_standardscripts
 .. _development guidelines: https://tssw-developer.lsst.io
-
 
 
 .. _Jupyter-notebooks:
@@ -129,6 +137,7 @@ Jupyter notebooks
 
 The notebook server available at the summit control network is built on top of the `DM science platform`_, augmented with `Telescope and Site observatory control package`_.
 They allow users to combine observatory control activities with data analysis in a highly interactive web-based interface.
+This includes analysis of data from the EFD.
 
 .. _nublado:
 .. _DM science platform: https://nb.lsst.io
@@ -141,9 +150,8 @@ Although extremely powerful and flexible, we do not expect notebooks to be used 
 These are the main situations where users are expected to resort to notebooks:
 
   - Executing an integration, commissioning or engineering activity that requires some level of interactivity.
-    For instance, (ADD EXAMPLE).
-  - Executing a custom sequence of observations that require some level of interactivity.
-    (ADD EXAMPLE).
+    For instance, `determining the M1 Lookup-table for the Auxiliary Telescope Active Optics System <https://tstn-012.lsst.io/>`_
+  - Executing a custom sequence of observations that require some level of interactivity, such as what was done to measure the `Sensitivity Matrix for the Auxiliary Telescope Active Optics System <https://tstn-016.lsst.io/>`_
   - Developing and testing new functionality not currently supported.
   - Debugging, testing and/or improving existing functionality.
   - Investigating issues with an individual component or a group of components.
@@ -158,6 +166,8 @@ These are some basic concepts users should make an effort to be familiar with:
   - Familiarity with `Python standard asyncio library`_.
   - Some familiarity with multithreading and coroutines.
   - Familiarity with git and GitHub.
+
+As mentioned previously, any features developed in a notebook can be added to the production codebase following the procedure found in `tstn-010`_.
 
 .. _SalObj: https://ts-salobj.lsst.io
 .. _Remote: https://ts-salobj.lsst.io/py-api/lsst.ts.salobj.Remote.html#lsst.ts.salobj.Remote
@@ -174,7 +184,7 @@ Details on how this repository fits into the development process can be found in
 .. _ts_notebooks: https://github.com/lsst-ts/ts_notebooks
 .. _tstn-010: https://tstn-010.lsst.io
 
-.. _Actor-Interactions:
+.. _Actor-Expectations:
 
 Expectations on Actor Interactions and Abilities
 ================================================
@@ -182,6 +192,8 @@ Expectations on Actor Interactions and Abilities
 As discussed in the `Introduction`_, the roles of different personnel in the observatory will interact with the control system at multiple levels.
 Some users will have a broad expanse of interactions, yet shallow in depth, whereas others will have narrow interactions but drill deep into the specific application.
 It is useful to try to define these roles such that the user-experience and breadth of knowledge required to perform them can be better aligned to tailor the ease-of-use, flexibility, and functionality of the various interfaces.
+
+.. _Actor-Definitions:
 
 Definition of Roles
 -------------------
@@ -207,6 +219,8 @@ Below is a broad definition of these roles and how they differ in interaction an
         Their level of knowledge is generally very deep in the area of the operation of a particular subsystem but their understanding of full system interaction and operation is much reduced compared to the other roles.
         These actors do not perform operational activities.
         Their software development expertise is very high and they are almost always writing production-level code.
+
+.. _Actor-Interactions:
 
 Actor Interactions with the Control Software
 --------------------------------------------
@@ -280,22 +294,26 @@ Note that it does not specify non-software tasks associated with someone in that
 Examples of Different Levels of Operations
 ==========================================
 
-This can probably be incorporated into the above section, but keeping separate for now to facilitate discussion
+This section includes various examples of procedures mentioned in the above sections.
+Below is a series of tasks associated with a given actor.
+In the case of operational examples (e.g. taking an image) they may include multiple possible procedures to perform the task with the goal of being able to demonstrate to the reader the advantages and disadvantages of each system.
+In the case of taking an image, this can be done from the scriptQueue via LOVE, by launching a script from a notebook, or just from a command in a notebook.
+From the example it is clear that launching a script from a notebook to take a simple image is onerous and not the recommended approach.
 
-User-Level:
+Operational Tasks:
 
     - Slewing
     - Offsetting
     - Taking an Image
-    - Launching Script and editing config
-    - Type of Notebook to be executed?
+    - Launching a ccript and editing the configuration in LOVE
+    - Execution of a notebook
 
 
-Commissioning Level:
+Commissioning Actor Tasks:
 
-    - Updating Config file
-    - Standard Notebook for testing
-    - Script writing example?
+    - Updating a CSC configuration file
+    - Creation of a notebook to be used for testing
+    - Example of how to write a script
 
 
 Items to be addressed in a future revision
@@ -309,18 +327,6 @@ Items to be addressed in a future revision
 
     - Discussion of test-stands and how to use them
 
-
-.. _Contributing:
-
-Contributing
-============
-
-Occasionally, specially during early commissioning and integration activities, users may face situations where they need to perform a certain type of operation that is not possible with the available script set.
-In these situations, users are highly encouraged to contribute to the main feature set.
-
-.. note::
-   I feel that this is already covered in tstn-010, so, maybe remove it?
-   Or maybe just adding a quick overview?
 
 .. .. rubric:: References
 
