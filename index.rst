@@ -26,22 +26,22 @@ The top-level functionality specifications that define much of the development o
   - An interactive mode, equivalent to a user sandbox space, must be available to allow development of routines on the fly as well as debugging;
   - Capability to incorporate user-developed features;
 
-In the standard operational model used to perform the survey, the observatory will be largely driven by the observatory Scheduler.
+In the standard operational model used to perform the survey, the observatory will be largely driven by the Scheduler.
 The Scheduler designates a target and a specially formatted script containing a series of operations to be performed (such as slewing the telescope and taking an image).
-The execution of the script handled by the control system while the user is able to observe (or interrupt) the progress via a graphical interface.
+The execution of the script is handled by the control system while the user is able to monitor (or interrupt) the progress via a graphical interface.
 Operators will be much more involved during the start-up and shutdown phases, as well as during afternoon calibrations.
 In the majority of cases, these routine operations are expected to be executed by the operator from a high-level interface of the observatory control software (as discussed in following sections).
 
 During integration, commissioning, and engineering time, there will be situations where non-standard, customized operations will need to be executed.
-These operations will often be exercised by specialists to a specific subsystem (e.g. M1M3) and require a knowledge base that differs from that of an observing specialist.
+These operations will often be exercised by subsystem specialists (e.g. M1M3) and require a knowledge base that differs from that of an observing specialist.
 The breadth of the observatory control system allows users to perform both standard routines and customized tasks via three main interactive components:
 
     - :ref:`LSST Observing Visualization Environment (LOVE)<LOVE>`
     - :ref:`ScriptQueue <Script-Queue>`
     - :ref:`Jupyter notebooks <Jupyter-notebooks>`
 
-This document begins with a high-level overview of the three components and explores how users can take advantage of their features to accomplish different types of tasks.
-Then, we define three main actors and outline their roles and assumed levels of knowledge regarding when performing specific tasks.
+This document begins with a high-level overview of these three components and explores how users can take advantage of their features to accomplish different types of tasks.
+Then, we define three main actors, outline their roles, and describe the assumed level of knowledge regarding when performing specific tasks.
 These actors and roles are used to assist in defining the usability expectations of the components and control system in general as well as the underlying assumptions of the knowledge required for each role.
 In reality, the people's roles will be less discrete and there will be significant overlap between these roles.
 The identified actors are:
@@ -50,9 +50,9 @@ The identified actors are:
     2. Commissioning Scientists
     3. Software Developers
 
-Finally, we present concrete examples of interactions that the actors will perform with the OCS, linking to procedures on how to do them using the multiple components.
+Finally, we present concrete examples of interactions that the actors will perform with the Observatory Control System, linking to procedures on how to do them using the multiple components.
 These examples explore how users best take advantage of the component's features.
-They also include cases of how *not* to use a component due limitations or inefficiencies in various areas.
+They also include cases of how **not** to use a component due to limitations or inefficiencies in various areas.
 The examples are also useful in facilitating discussion regarding the ease-of-use of each operation, which is expected to stimulate discussion on how to best improve system usability and/or performance.
 
 .. _LOVE:
@@ -63,7 +63,7 @@ LOVE
 Tiago insert (or link) content here.
 
 Important to say that users will interact with basic observatory operations via LOVE, but what is actually happening on the back end is that these operations (e.g. offsets) are actually scripts that get loaded and performed.
-
+This is task dependent and worth discussing here.
 
 .. _Script-Queue:
 
@@ -72,7 +72,7 @@ Script Queue
 
 The `ScriptQueue`_ is the main hub for the execution of regular operations and requires a minimum level of interaction by the user.
 As mentioned in the previous section, it is also used as a back-end for user-commanded actions performed using the `LOVE`_ interface.
-For example, when a user performs a telescope offset operation using LOVE, the actual action perform by LOVE system will the queueing of a :ref:`SAL Script <SAL_Scripts>` that then gets executed by the `ScriptQueue`_.
+For example, when a user performs a take-image operation using LOVE, the actual action perform by LOVE system will the queueing of a :ref:`SAL Script <SAL_Scripts>` that then gets executed by the `ScriptQueue`_.
 The ScriptQueue is also the main tool observers will rely on to perform regular nighttime operations, such as tracking a target and obtaining a standardized set of observations.
 The `ScriptQueue`_ is flexible in how it handles and executes scripts but generally it runs sequentially.
 As soon as one script finishes, the next one begins until no scripts remain to be run.
@@ -80,9 +80,8 @@ As soon as one script finishes, the next one begins until no scripts remain to b
 ..
     This next bit feel repetitive..
 
-This architecture (or methodology) means the number functions that get executed by the scriptQueue will be very large and their complexity varies significantly.
-For instance, when operators need to prepare the observatory for calibrations or for night operation, they will add a rather complex script to the ScriptQueue that will perform all the required tasks (e.g. position telescope and dome, perform required fine tuning in positioning, open mirror covers and so on).
-
+This architecture (or methodology) means the number of different operations that get executed by the scriptQueue will be very large and their complexity varies significantly.
+For instance, when observing specialists need to prepare the observatory for calibrations or for night operation, they will add a rather complex script to the ScriptQueue that will perform all the required tasks (e.g. position telescope and dome, perform required fine tuning in positioning, open mirror covers and so on).
 The Scheduler for the survey essentially adds scripts to the scriptQueue after each visit until told by the observer to stop.
 
 As mentioned already, interacting with the ScriptQueue is mainly done through :ref:`LOVE ScriptQueue user interface <fig-scriptqueueui>`.
@@ -98,7 +97,7 @@ Lastly, users can quickly relaunch previously run scripts without having to re-e
 
    A screenshot of the LOVE interface to interact with the ScriptQueue.
 
-In general, scripts require minimum interaction to be executed except, of course, for the occasional configuration.
+The main interaction required when using the scriptQueue is the modification of the occasional configuration.
 A database of configurations will be available for users to execute the most common set of operations.
 Users also have the possibility to edit configurations from the user interface, which also provides on-the-fly schema validation.
 
@@ -114,14 +113,16 @@ Other than that, some knowledge about `yaml`_ and `json schema`_ may be useful f
 SAL Scripts
 -----------
 
-`SAL Scripts`_ are the files which contain the logic and coordination of events and CSCs that get executed by the `ScriptQueue`_.
+`SAL Scripts`_ contain the logic and coordination of events and CSCs that get executed by the `ScriptQueue`_.
 It is not expected these will be modified during standard night-time operations.
-All `SAL Scripts`_ vary greatly in complexity of the operation being performed.
+`SAL Scripts`_ vary considerable in complexity depending upon the operations being performed.
 For example, a SAL script that performs a relatively fundamental task is `Enable MTCS <https://github.com/lsst-ts/ts_standardscripts/blob/develop/python/lsst/ts/standardscripts/maintel/enable_mtcs.py>`_ which brings all components of the TCS to the enabled state.
-The script is normally a launched using the default configuration which enables all components, however, the flexibility is present to only enable a subset if the observer chooses to do so.
+The script is normally launched using the default configuration, which enables all components.
+However, the flexibility is present to only enable a subset if the observer chooses to do so.
 A more complicated script, such as `Prepare for On-Sky <https://github.com/lsst-ts/ts_standardscripts/blob/develop/python/lsst/ts/standardscripts/auxtel/prepare_for_onsky.py>`_ performs a series of order-specific operations to bring the systems online, then open the dome and telescope safely.
+
 `SAL Scripts`_ obey strict formatting requirements and must contain specific information in order to be capable of execution.
-Although normally executed via `LOVE`_, it is also possible to execute these from a Jupyter Notebook or from the command line when required.
+Although normally executed via `LOVE`_, it is also possible to execute these from a Jupyter Notebook or directly from the command line, when desired.
 This functionality is particularly useful when actively developing or debugging a script.
 
 Regular operational scripts are separated into two distinct groups of `SAL Scripts`_:
@@ -150,7 +151,7 @@ Jupyter notebooks
 
 The notebook server available at the summit control network is built on top of the `DM science platform`_, augmented with `Telescope and Site observatory control package`_.
 Notebooks allow users to combine observatory control activities with data analysis in a highly interactive web-based interface.
-This includes analysis of data queried the EFD.
+This includes analysis of data queried from the EFD.
 
 .. _nublado:
 .. _DM science platform: https://nb.lsst.io
@@ -279,7 +280,7 @@ Note that it does not specify non-software tasks associated with someone in that
         - Not required to identify the issue in the source code
         - Able to create and load new config files
         - Writes and executes custom external scripts from both notebooks, ScriptQueue and LOVE
-        - Not expected to write production level scripts (see tstn-010 for definition)
+        - Not expected to write production level scripts (see `tstn-010`_ for definition)
         - Able to switch between software versions of deployed components
         - Able to update scriptQueue container repositories
         - Able to diagnose issues via the EFD/Chronograf
@@ -299,7 +300,7 @@ Note that it does not specify non-software tasks associated with someone in that
 
         - Modifies and builds components, tags for release where appropriate
         - Familiar with deployment strategies and restarting components (ArgoCD)
-        - Ability to probe into individually deployed containers (Rancher)
+        - Ability to probe into individually deployed components (Rancher etc.)
         - Often works from the standardized development container
 
 

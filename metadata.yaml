@@ -17,8 +17,8 @@ doc_title: "Concept of Control System Operations"
 
 # Author names, ordered as a list. Each author name should be formatted as 'First Last'
 authors:
-  - "Tiago Ribeiro"
   - "Patrick Ingraham"
+  - "Tiago Ribeiro"
 
 # Current document revision date, YYYY-MM-DD
 # Only set this field if you need to manually fix the revision date;
