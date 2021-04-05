@@ -7,6 +7,7 @@
 .. note::
 
    This tech note details some basic concepts about how users will interact with the Vera Rubin Observatory control system during commissioning and operations.
+   The document is still under heavy development.
 
 
 .. _Introduction:
@@ -60,10 +61,14 @@ The examples are also useful in facilitating discussion regarding the ease-of-us
 LOVE
 ====
 
-Tiago insert (or link) content here.
+.. note::
 
-Important to say that users will interact with basic observatory operations via LOVE, but what is actually happening on the back end is that these operations (e.g. offsets) are actually scripts that get loaded and performed.
-This is task dependent and worth discussing here.
+   This section is still being written.
+
+The LSST Observatory Visualization Environment is the primary user-facing interface to the control system.
+LOVE is most often used to display status but it also includes control interfaces for regular operations such as slewing, offsetting or performing a controlled stop.
+Interaction with the `ScriptQueue`_, as discussed in the following section, is also an important use-case of the LOVE system.
+
 
 .. _Script-Queue:
 
@@ -76,9 +81,6 @@ For example, when a user performs a take-image operation using LOVE, the actual 
 The ScriptQueue is also the main tool observers will rely on to perform regular nighttime operations, such as tracking a target and obtaining a standardized set of observations.
 The `ScriptQueue`_ is flexible in how it handles and executes scripts but generally it runs sequentially.
 As soon as one script finishes, the next one begins until no scripts remain to be run.
-
-..
-    This next bit feel repetitive..
 
 This architecture (or methodology) means the number of different operations that get executed by the scriptQueue will be very large and their complexity varies significantly.
 For instance, when observing specialists need to prepare the observatory for calibrations or for night operation, they will add a rather complex script to the ScriptQueue that will perform all the required tasks (e.g. position telescope and dome, perform required fine tuning in positioning, open mirror covers and so on).
@@ -134,6 +136,7 @@ Regular operational scripts are separated into two distinct groups of `SAL Scrip
      Following the `development guidelines`_ on this package is still recommended (but not as strictly enforced) and code is subject to less rigorous code review.
 
 Additional details about the classification of different levels of operations can be found in `tstn-010`_, as well as guidelines on how to contribute features to the code base.
+A tutorial on how to write a script in included in the `Examples`_ section.
 
 .. _ScriptQueue: https://ts-scriptqueue.lsst.io
 .. _SAL Scripts: https://ts-salobj.lsst.io/sal_scripts.html
@@ -279,7 +282,8 @@ Note that it does not specify non-software tasks associated with someone in that
         - Ability to diagnose both system and component level behavioural issues
         - Not required to identify the issue in the source code
         - Able to create and load new config files
-        - Writes and executes custom external scripts from both notebooks, ScriptQueue and LOVE
+        - Executes scripts
+        - `Writes custom external scripts <https://obs-controls.lsst.io/Control-User-Interfaces/writing-sal-scripts.html>`_ from both notebooks, ScriptQueue and LOVE
         - Not expected to write production level scripts (see `tstn-010`_ for definition)
         - Able to switch between software versions of deployed components
         - Able to update scriptQueue container repositories
@@ -304,33 +308,34 @@ Note that it does not specify non-software tasks associated with someone in that
         - Often works from the standardized development container
 
 
-Examples of Different Levels of Operations
-==========================================
+.. _Examples:
 
-This section includes various examples of procedures mentioned in the above sections.
-Below is a series of tasks associated with a given actor.
-In the case of operational examples (e.g. taking an image) they may include multiple possible procedures to perform the task with the goal of being able to demonstrate to the reader the advantages and disadvantages of each system.
-In the case of taking an image, this can be done from the scriptQueue via LOVE, by launching a script from a notebook, or just from a command in a notebook.
-From the example it is clear that launching a script from a notebook to take a simple image is onerous and not the recommended approach.
+Examples of Various Operational Tasks
+=====================================
+
+This section includes various examples of procedures mentioned in the above sections that are associated with various actors.
+In the case of operational examples, they may include multiple possible procedures to perform the task with the goal of being able to demonstrate to the reader the advantages and disadvantages of each system.
+For example, in the case of taking an image, this can be done from the scriptQueue via LOVE, by launching a script from a notebook, or just from the command line.
+However, from the example it is clear that launching a script from a notebook to take a simple image is onerous and not the recommended approach.
 
 Operational Tasks:
 
     - Slewing
     - Offsetting
     - Taking an Image
-    - Launching a script and editing the configuration in LOVE
+    - Launching a script and editing the parameters in LOVE
     - Execution of a notebook
 
 
 Commissioning Actor Tasks:
 
-    - Updating a CSC configuration file
+    - `Writing a SAL Script <https://obs-controls.lsst.io/Control-User-Interfaces/writing-sal-scripts.html>`_
+    - `Creating <https://tstn-020.lsst.io/#section-configuration-creating-a-new>`_ and `updating <https://tstn-020.lsst.io/#on-the-fly-changes>`_ a CSC configuration file
     - Creation of a notebook to be used for testing
-    - Example of how to write a script
 
 
-Items to be addressed in a future revision
-==========================================
+Items to be Addressed in Future Revisions
+=========================================
 
     - On-the-fly image interaction
     - Communication/coordination with other software systems
